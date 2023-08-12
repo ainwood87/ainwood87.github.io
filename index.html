@@ -15,46 +15,61 @@
 <body>
     <label for="paintcolor">Select a paint color:</label>
     <input type="color" id="paintcolor" name="paintcolor" value="#ff0000">
+    <br>
+    <canvas id="myCanvas" width="300" height="300" style="border:1px solid black"></canvas>
 
-    <table id="tableID" width="100" height="100">
-        <tr>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-        </tr>
-        <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-    </table>
     <script>
+        const rowLength = 10
+        const colLength = 10
+        const canvas = document.getElementById("myCanvas");
+        const ledWidth = canvas.width / rowLength
+        const ledHeight = canvas.height / colLength
+        const ctx = canvas.getContext("2d");
+
+        canvas.addEventListener('click', function (event) {
+            const rect = canvas.getBoundingClientRect()
+            ctx.beginPath();
+        ctx.lineWidth = "2";
+            ctx.strokeStyle = "black"
+            ctx.fillStyle = document.getElementById("paintcolor").value;
+
+            const row = Math.floor((event.clientY - rect.top) / ledWidth)
+            const col = Math.floor((event.clientX - rect.left) / ledHeight)
+            ctx.fillRect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
+            ctx.rect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
+            ctx.stroke();
+        });
+
+        ctx.lineWidth = "2";
+        ctx.strokeStyle = "black";
+        ctx.beginPath();
+
+        for (var row = 0; row < colLength; ++row) {
+            for (var col = 0; col < rowLength; ++col) {
+                ctx.rect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
+            }
+        }
+        ctx.stroke();
+
         var table = document.getElementById("tableID");
+        var mouseDown = 0;
+        document.body.onmousedown = function () {
+            ++mouseDown;
+        }
+        document.body.onmouseup = function () {
+            --mouseDown;
+        }
 
         if (table != null) {
             for (var i = 0; i < table.rows.length; i++) {
                 for (var j = 0; j < table.rows[i].cells.length; j++)
                     table.rows[i].cells[j].onclick = function () {
-                        tableText(this);
-                    };
+                        bar(this);
+                    }
             }
         }
-
-        function tableText(tableCell) {
+        function bar(tableCell) {
+            debugger;
             tableCell.style.backgroundColor = document.getElementById("paintcolor").value;
         }
 
