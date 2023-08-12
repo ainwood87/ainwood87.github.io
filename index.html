@@ -1,17 +1,6 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-    <style>
-        table,
-        th,
-        td {
-            border: 1px solid black;
-            border-collapse: collapse;
-        }
-    </style>
-</head>
-
 <body>
     <label for="paintcolor">Select a paint color:</label>
     <input type="color" id="paintcolor" name="paintcolor" value="#ff0000">
@@ -25,17 +14,47 @@
         const ledWidth = canvas.width / rowLength
         const ledHeight = canvas.height / colLength
         const ctx = canvas.getContext("2d");
+        var mouseDown = 0;
 
-        canvas.addEventListener('click', function (event) {
+        canvas.addEventListener('mousedown', function (event) {
+            mouseDown = 1
+            console.log(mouseDown)
+        });
+        canvas.addEventListener('mouseup', function (event) {
+            mouseDown = 0;
+            console.log(mouseDown)
+        });
+
+        function getCursorPosition(canvas, event) {
             const rect = canvas.getBoundingClientRect()
+            const x = event.clientX - rect.left
+            const y = event.clientY - rect.top
+            return [x, y]
+        }
+
+        function lightLed(canvas, event) {
+            let [x, y] = getCursorPosition(canvas, event);
             ctx.beginPath();
             ctx.fillStyle = document.getElementById("paintcolor").value;
-
-            const row = Math.floor((event.clientY - rect.top) / ledWidth)
-            const col = Math.floor((event.clientX - rect.left) / ledHeight)
+            const row = Math.floor(y / ledHeight)
+            const col = Math.floor(x / ledWidth)
             ctx.fillRect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
             ctx.rect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
             ctx.stroke();
+        }
+
+        canvas.addEventListener('click', function (event) {
+            lightLed(canvas, event)
+        });
+
+        canvas.addEventListener('mouseout', function (event) {
+            mouseDown = 0
+        });
+
+        canvas.addEventListener('mousemove', function (event) {
+            if (mouseDown) {
+                lightLed(canvas, event)
+            }
         });
 
         ctx.lineWidth = "2";
@@ -49,7 +68,6 @@
         }
         ctx.stroke();
     </script>
-
 </body>
 
 </html>
