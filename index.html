@@ -2,7 +2,15 @@
 <html>
 
 <body>
-    <label for="paintcolor">P:</label>
+    <p>Mode:</p>
+      <input type="radio" id="paint" name="mode" value="paint">
+      <label for="paint">Paint</label><br>
+      <input type="radio" id="erase" name="mode" value="erase">
+      <label for="erase">Erase</label><br>
+      <input type="radio" id="select" name="mode" value="select">
+      <label for="select">Select</label>
+    <br>
+    <label for="paintcolor">Active Color:</label>
     <input type="color" id="paintcolor" name="paintcolor" value="#ff0000">
     <br>
     <canvas id="myCanvas" width="300" height="300" style="border:1px solid black"></canvas>
@@ -78,9 +86,24 @@
             ctx.stroke();
         }
 
+        function getMode() {
+            var ele = document.getElementsByName('mode');
+            var mode = "none"
+
+            for (i = 0; i < ele.length; ++i) {
+                if (ele[i].checked) {
+                    mode = ele[i].value;
+                }
+            }
+
+            return mode
+        }
+
         canvas.addEventListener('click', function (event) {
-            if (lightLed(canvas, event)) {
-                drawLeds();
+            if (getMode() == "paint") {
+                if (lightLed(canvas, event)) {
+                    drawLeds();
+                }
             }
         });
 
@@ -90,9 +113,11 @@
         });
 
         canvas.addEventListener('mousemove', function (event) {
-            if (mouseDown) {
-                if (lightLed(canvas, event)) {
-                    drawLeds();
+            if (getMode() == "paint") {
+                if (mouseDown) {
+                    if (lightLed(canvas, event)) {
+                        drawLeds();
+                    }
                 }
             }
         });
