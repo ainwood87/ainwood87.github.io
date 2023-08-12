@@ -50,11 +50,10 @@
             return [x, y]
         }
 
-        function lightLed(canvas, event) {
+        function lightLed(canvas, event, color) {
             let [x, y] = getCursorPosition(canvas, event);
             const row = Math.floor(y / ledHeight)
             const col = Math.floor(x / ledWidth)
-            const color = document.getElementById("paintcolor").value;
 
             /* Determine if the color is going to change */
             const hasChanged = (color != leds[(colCount * row) + col].color)
@@ -100,8 +99,14 @@
         }
 
         canvas.addEventListener('click', function (event) {
-            if (getMode() == "paint") {
-                if (lightLed(canvas, event)) {
+            const mode = getMode();
+            if (mode == "paint") {
+                const color = document.getElementById("paintcolor").value;
+                if (lightLed(canvas, event, color)) {
+                    drawLeds();
+                }
+            } else if (mode == "erase") {
+                if (lightLed(canvas, event, "white")) {
                     drawLeds();
                 }
             }
@@ -113,9 +118,17 @@
         });
 
         canvas.addEventListener('mousemove', function (event) {
-            if (getMode() == "paint") {
+            const mode = getMode();
+            if (mode == "paint") {
                 if (mouseDown) {
-                    if (lightLed(canvas, event)) {
+                    const color = document.getElementById("paintcolor").value;
+                    if (lightLed(canvas, event, color)) {
+                        drawLeds();
+                    }
+                }
+            } else if (mode == "erase") {
+                if (mouseDown) {
+                    if (lightLed(canvas, event, "white")) {
                         drawLeds();
                     }
                 }
