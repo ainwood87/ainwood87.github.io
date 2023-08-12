@@ -50,29 +50,6 @@
             }
         }
         ctx.stroke();
-
-        var table = document.getElementById("tableID");
-        var mouseDown = 0;
-        document.body.onmousedown = function () {
-            ++mouseDown;
-        }
-        document.body.onmouseup = function () {
-            --mouseDown;
-        }
-
-        if (table != null) {
-            for (var i = 0; i < table.rows.length; i++) {
-                for (var j = 0; j < table.rows[i].cells.length; j++)
-                    table.rows[i].cells[j].onclick = function () {
-                        bar(this);
-                    }
-            }
-        }
-        function bar(tableCell) {
-            debugger;
-            tableCell.style.backgroundColor = document.getElementById("paintcolor").value;
-        }
-
     </script>
 
 </body>
