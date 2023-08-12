@@ -29,8 +29,6 @@
         canvas.addEventListener('click', function (event) {
             const rect = canvas.getBoundingClientRect()
             ctx.beginPath();
-        ctx.lineWidth = "2";
-            ctx.strokeStyle = "black"
             ctx.fillStyle = document.getElementById("paintcolor").value;
 
             const row = Math.floor((event.clientY - rect.top) / ledWidth)
