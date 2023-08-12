@@ -2,17 +2,27 @@
 <html>
 
 <body>
-    <label for="paintcolor">Select a paint color:</label>
+    <label for="paintcolor">P:</label>
     <input type="color" id="paintcolor" name="paintcolor" value="#ff0000">
     <br>
     <canvas id="myCanvas" width="300" height="300" style="border:1px solid black"></canvas>
 
     <script>
-        const rowLength = 10
-        const colLength = 10
+        class Led {
+            constructor() {
+                this.color = "white";
+                this.on = false;
+            }
+        }
+        const leds = []
+        const rowCount = 10
+        const colCount = 10
+        for (var i = 0; i < rowCount * colCount; ++i) {
+            leds[i] = new Led();
+        }
         const canvas = document.getElementById("myCanvas");
-        const ledWidth = canvas.width / rowLength
-        const ledHeight = canvas.height / colLength
+        const ledWidth = canvas.width / rowCount
+        const ledHeight = canvas.height / colCount
         const ctx = canvas.getContext("2d");
         var mouseDown = 0;
 
@@ -34,39 +44,60 @@
 
         function lightLed(canvas, event) {
             let [x, y] = getCursorPosition(canvas, event);
-            ctx.beginPath();
-            ctx.fillStyle = document.getElementById("paintcolor").value;
             const row = Math.floor(y / ledHeight)
             const col = Math.floor(x / ledWidth)
-            ctx.fillRect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
-            ctx.rect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
+            const color = document.getElementById("paintcolor").value;
+
+            /* Determine if the color is going to change */
+            const hasChanged = (color != leds[(colCount * row) + col].color)
+
+            /* Set the LED's new color */
+            leds[(colCount * row) + col].color = color
+
+            return hasChanged /* Return the change state, so we know to draw */
+        }
+
+        function drawLeds() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.lineWidth = "2";
+            ctx.strokeStyle = "black";
+            ctx.beginPath();
+
+            // Draw each led one by one
+            for (var row = 0; row < colCount; ++row) {
+                for (var col = 0; col < rowCount; ++col) {
+                    ctx.fillStyle = leds[(row * colCount) + col].color;
+                    ctx.fillRect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
+                    ctx.rect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
+                }
+            }
+
+            // Commit the drawing to canvas
             ctx.stroke();
         }
 
         canvas.addEventListener('click', function (event) {
-            lightLed(canvas, event)
+            if (lightLed(canvas, event)) {
+                drawLeds();
+            }
         });
 
+        /* Reset the mouseDown state if we mouse out of the canvas */
         canvas.addEventListener('mouseout', function (event) {
             mouseDown = 0
         });
 
         canvas.addEventListener('mousemove', function (event) {
             if (mouseDown) {
-                lightLed(canvas, event)
+                if (lightLed(canvas, event)) {
+                    drawLeds();
+                }
             }
         });
 
-        ctx.lineWidth = "2";
-        ctx.strokeStyle = "black";
-        ctx.beginPath();
-
-        for (var row = 0; row < colLength; ++row) {
-            for (var col = 0; col < rowLength; ++col) {
-                ctx.rect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
-            }
-        }
-        ctx.stroke();
+        drawLeds();
     </script>
 </body>
 
