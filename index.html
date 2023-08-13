@@ -20,6 +20,7 @@
             constructor() {
                 this.color = "white";
                 this.on = false;
+                this.isSelected = false;
             }
         }
         const leds = []
@@ -50,10 +51,24 @@
             return [x, y]
         }
 
-        function lightLed(canvas, event, color) {
+        function getIndex(event) {
             let [x, y] = getCursorPosition(canvas, event);
             const row = Math.floor(y / ledHeight)
             const col = Math.floor(x / ledWidth)
+            return [row, col]
+        }
+
+        function selectLed(event) {
+            let [row, col] = getIndex(event);
+            let rv = !leds[(colCount * row) + col].isSelected;
+            leds[(colCount * row) + col].isSelected = true;
+            console.log("select");
+            console.log([row, col]);
+            return rv;
+        }
+
+        function lightLed(canvas, event, color) {
+            let [row, col] = getIndex(event);
 
             /* Determine if the color is going to change */
             const hasChanged = (color != leds[(colCount * row) + col].color)
@@ -64,24 +79,45 @@
             return hasChanged /* Return the change state, so we know to draw */
         }
 
+        function resetSelection() {
+            leds.forEach(item => item.isSelected = false);
+        }
+
         function drawLeds() {
             // Clear the canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             ctx.lineWidth = "2";
-            ctx.strokeStyle = "black";
-            ctx.beginPath();
 
+            ctx.beginPath();
             // Draw each led one by one
             for (var row = 0; row < colCount; ++row) {
                 for (var col = 0; col < rowCount; ++col) {
-                    ctx.fillStyle = leds[(row * colCount) + col].color;
+                    var led = leds[(row * colCount) + col]
+                    ctx.strokeStyle = "black"
+                    ctx.fillStyle = led.color;
                     ctx.fillRect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
                     ctx.rect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
                 }
             }
 
             // Commit the drawing to canvas
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.lineWidth = "2";
+            // Go over again to draw highlighted leds.
+            for (var row = 0; row < colCount; ++row) {
+                for (var col = 0; col < rowCount; ++col) {
+                    var led = leds[(row * colCount) + col]
+                    if (led.isSelected) {
+                        ctx.strokeStyle = "blue"
+                        ctx.fillStyle = led.color;
+                        ctx.fillRect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
+                        ctx.rect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
+                    }
+                }
+            }
             ctx.stroke();
         }
 
@@ -109,6 +145,10 @@
                 if (lightLed(canvas, event, "white")) {
                     drawLeds();
                 }
+            } else if (mode == "select") {
+                if (selectLed(event)) {
+                    drawLeds();
+                }
             }
         });
 
@@ -132,8 +172,24 @@
                         drawLeds();
                     }
                 }
+            } else if (mode == "select") {
+                if (mouseDown) {
+                    if (selectLed(event)) {
+                        drawLeds();
+                    }
+                }
             }
         });
+
+        // attach event handlers to radio buttons to reset selection
+        var ele = document.getElementsByName('mode');
+
+        for (i = 0; i < ele.length; ++i) {
+            ele[i].addEventListener('click', function (event) {
+                resetSelection();
+                drawLeds();
+            });
+        }
 
         drawLeds();
     </script>
