@@ -75,14 +75,34 @@
                 newLeds[i] = Object.assign({}, leds[i]);
 
                 // Execute the code to compute data of newLeds[i]
-                // for now assume just copy right
-                col = i % colCount
-                row = Math.floor(i / colCount)
-                next = i + 1
-                if ((colCount - 1) == col) {
-                    next = row * colCount
+                code = leds[i].code.split(" ")
+                switch (code[0]) {
+                    case "COPY":
+                        {
+                            delta = [0, 0]
+                            switch (code[1]) {
+                                case "LEFT":
+                                    delta[1] = -1
+                                    break;
+                                case "RIGHT":
+                                    delta[1] = 1
+                                    break;
+                                case "UP":
+                                    delta[0] = -1
+                                    break;
+                                case "DOWN":
+                                    delta[0] = 1
+                                    break;
+                            }
+                            coord = idx2Coord(i)
+                            next = getRelative(coord, delta)
+                            newLeds[i].color = leds[(colCount * next[0]) + next[1]].color
+                        }
+                        break;
+                    default:
+                        console.log("Unsupported Operation")
+                        break;
                 }
-                newLeds[i].color = leds[next].color
             }
 
             leds = newLeds
@@ -102,6 +122,14 @@
             const row = Math.floor(y / ledHeight)
             const col = Math.floor(x / ledWidth)
             return [row, col]
+        }
+
+        function idx2Coord(idx) {
+            return [Math.floor(idx / colCount), idx % colCount]
+        }
+
+        function getRelative([row, col], [rowDelta, colDelta]) {
+            return [(row + rowDelta + rowCount) % rowCount, (col + colDelta + colCount) % colCount]
         }
 
         function selectLed(event) {
