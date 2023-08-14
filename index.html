@@ -3,24 +3,27 @@
 
 <body>
     <p>Mode:</p>
-      <input type="radio" id="paint" name="mode" value="paint">
-      <label for="paint">Paint</label><br>
-      <input type="radio" id="erase" name="mode" value="erase">
-      <label for="erase">Erase</label><br>
-      <input type="radio" id="select" name="mode" value="select">
-      <label for="select">Select</label>
+    <input type="radio" id="paint" name="mode" value="paint">
+    <label for="paint">Paint</label><br>
+    <input type="radio" id="erase" name="mode" value="erase">
+    <label for="erase">Erase</label><br>
+    <input type="radio" id="select" name="mode" value="select">
+    <label for="select">Select</label>
     <br>
     <label for="paintcolor">Active Color:</label>
     <input type="color" id="paintcolor" name="paintcolor" value="#ff0000">
+    <button type="button" id="loadButton">Load Script</button>
+    <button type="button" id="writeButton">Write Script</button>
     <br>
     <canvas id="myCanvas" width="300" height="300" style="border:1px solid black"></canvas>
-
+    <textarea id="scriptArea" name="scriptArea" rows="4" cols="50"></textarea>
     <script>
         class Led {
             constructor() {
                 this.color = "white";
                 this.on = false;
                 this.isSelected = false;
+                this.code = "nop"
             }
         }
         const leds = []
@@ -30,6 +33,9 @@
             leds[i] = new Led();
         }
         const canvas = document.getElementById("myCanvas");
+        const writebutton = document.getElementById("writeButton");
+        const loadButton = document.getElementById("loadButton");
+        const scriptArea = document.getElementById("scriptArea");
         const ledWidth = canvas.width / rowCount
         const ledHeight = canvas.height / colCount
         const ctx = canvas.getContext("2d");
@@ -39,9 +45,26 @@
             mouseDown = 1
             console.log(mouseDown)
         });
+
         canvas.addEventListener('mouseup', function (event) {
             mouseDown = 0;
             console.log(mouseDown)
+        });
+
+        writeButton.addEventListener('click', function(event) {
+            console.log("clicked write button")
+            selected = leds.filter(function(led){return led.isSelected})
+            selected.forEach(item => item.code = scriptArea.value);
+        });
+
+        loadButton.addEventListener('click', function(event) {
+            console.log("clicked load button")
+            selected = leds.filter(function(led){return led.isSelected})
+
+            if (selected.length == 1)
+            {
+                scriptArea.value = selected[0].code
+            }
         });
 
         function getCursorPosition(canvas, event) {
