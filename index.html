@@ -14,6 +14,7 @@
     <input type="color" id="paintcolor" name="paintcolor" value="#ff0000">
     <button type="button" id="loadButton">Load Script</button>
     <button type="button" id="writeButton">Write Script</button>
+    <button type="button" id="stepButton">Step</button>
     <br>
     <canvas id="myCanvas" width="300" height="300" style="border:1px solid black"></canvas>
     <textarea id="scriptArea" name="scriptArea" rows="4" cols="50"></textarea>
@@ -26,7 +27,7 @@
                 this.code = "nop"
             }
         }
-        const leds = []
+        var leds = []
         const rowCount = 10
         const colCount = 10
         for (var i = 0; i < rowCount * colCount; ++i) {
@@ -35,6 +36,7 @@
         const canvas = document.getElementById("myCanvas");
         const writebutton = document.getElementById("writeButton");
         const loadButton = document.getElementById("loadButton");
+        const stepButton = document.getElementById("stepButton");
         const scriptArea = document.getElementById("scriptArea");
         const ledWidth = canvas.width / rowCount
         const ledHeight = canvas.height / colCount
@@ -51,20 +53,41 @@
             console.log(mouseDown)
         });
 
-        writeButton.addEventListener('click', function(event) {
+        writeButton.addEventListener('click', function (event) {
             console.log("clicked write button")
-            selected = leds.filter(function(led){return led.isSelected})
+            selected = leds.filter(function (led) { return led.isSelected })
             selected.forEach(item => item.code = scriptArea.value);
         });
 
-        loadButton.addEventListener('click', function(event) {
+        loadButton.addEventListener('click', function (event) {
             console.log("clicked load button")
-            selected = leds.filter(function(led){return led.isSelected})
+            selected = leds.filter(function (led) { return led.isSelected })
 
-            if (selected.length == 1)
-            {
+            if (selected.length == 1) {
                 scriptArea.value = selected[0].code
             }
+        });
+
+        stepButton.addEventListener('click', function (event) {
+            console.log("clicked step button")
+            const newLeds = []
+            for (i = 0; i < rowCount * colCount; ++i) {
+                newLeds[i] = Object.assign({}, leds[i]);
+
+                // Execute the code to compute data of newLeds[i]
+                // for now assume just copy right
+                col = i % colCount
+                row = Math.floor(i / colCount)
+                next = i + 1
+                if ((colCount - 1) == col) {
+                    next = row * colCount
+                }
+                newLeds[i].color = leds[next].color
+            }
+
+            leds = newLeds
+
+            drawLeds();
         });
 
         function getCursorPosition(canvas, event) {
