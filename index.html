@@ -24,7 +24,50 @@
                 this.color = "white";
                 this.on = false;
                 this.isSelected = false;
-                this.code = "nop"
+                this.code = "nop";
+                this.row = 0;
+                this.col = 0;
+                this.getRelative = function(s) {
+                    /* The input is either one of the 4 pneumonics for directions, or a 'direction string' */
+                    if (s.slice(0, 2) == 'r"')
+                    {
+                        console.log("Received directional string")
+                        //TODO parse directional string
+                    } else {
+                        delta = [0, 0]
+                        switch (s) {
+                            case "LEFT":
+                                delta[1] = -1
+                                break;
+                            case "RIGHT":
+                                delta[1] = 1
+                                break;
+                            case "UP":
+                                delta[0] = -1
+                                break;
+                            case "DOWN":
+                                delta[0] = 1
+                                break;
+                        }
+                        delta[0] += this.row
+                        delta[1] += this.col
+
+                        //adjust for negatives..
+                        while (delta[0] < 0) {
+                            delta[0] += rowCount;
+                        }
+
+                        while (delta[1] < 0) {
+                            delta[1] += colCount;
+                        }
+
+                        // Take the modulus
+                        delta[0] = delta[0] % rowCount
+                        delta[1] = delta[1] % colCount
+
+                        return leds[(delta[0] * colCount) + delta[1]]
+                    }
+                }
             }
         }
         var leds = []
@@ -32,7 +75,10 @@
         const rowCount = 10
         const colCount = 10
         for (var i = 0; i < rowCount * colCount; ++i) {
+            let coord = idx2Coord(i)
             leds[i] = new Led();
+            leds[i].row = coord[0]
+            leds[i].col = coord[1]
         }
         const canvas = document.getElementById("myCanvas");
         const writebutton = document.getElementById("writeButton");
@@ -110,9 +156,8 @@
                                 delta[0] = 1
                                 break;
                         }
-                        coord = idx2Coord(i)
-                        next = getRelative(coord, delta)
-                        newLeds[i].color = leds[(colCount * next[0]) + next[1]].color
+                        next = led.getRelative(code[1])
+                        newLeds[i].color = leds[(colCount * next.row) + next.col].color
                     }
                     break;
                 default:
@@ -137,10 +182,6 @@
 
         function idx2Coord(idx) {
             return [Math.floor(idx / colCount), idx % colCount]
-        }
-
-        function getRelative([row, col], [rowDelta, colDelta]) {
-            return [(row + rowDelta + rowCount) % rowCount, (col + colDelta + colCount) % colCount]
         }
 
         function selectLed(event) {
