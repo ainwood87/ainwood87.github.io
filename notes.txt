@@ -1,0 +1,15 @@
+The registers are:
+POW - 0 for off, 1 for on.
+DAT - The data register. (ACC on other fictional systems).
+BAK - The backup register. 
+COL - The colour register. 
+
+Every vLed will have access to all other vLed registers through a dot syntax.
+So to copy the color of another vLed (A2 for example), would execute <MOV COL, A2.COL>.
+The <COPY led> instruction, if we keep it, could be thought of as a pneumonic for <MOV COL, led.COL>
+
+How do we do addressing?
+We could have absolute addressing syntax like Excel (A1, A2, ... B1, B2, etc)
+We could also use a bracket notation, like [row, col] for absolute, and {deltaRow, deltaCol} for relative.
+This is reasonably flexible for power users, but maybe difficult for beginners. I like the idea of a "direction string",
+which could start with some identifer like r"RIGHT RIGHT UP".
