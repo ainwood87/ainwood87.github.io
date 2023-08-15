@@ -28,6 +28,7 @@
             }
         }
         var leds = []
+        var newLeds = []
         const rowCount = 10
         const colCount = 10
         for (var i = 0; i < rowCount * colCount; ++i) {
@@ -70,38 +71,17 @@
 
         stepButton.addEventListener('click', function (event) {
             console.log("clicked step button")
-            const newLeds = []
+            newLeds = []
             for (i = 0; i < rowCount * colCount; ++i) {
                 newLeds[i] = Object.assign({}, leds[i]);
 
-                // Execute the code to compute data of newLeds[i]
-                code = leds[i].code.split(" ")
-                switch (code[0]) {
-                    case "COPY":
-                        {
-                            delta = [0, 0]
-                            switch (code[1]) {
-                                case "LEFT":
-                                    delta[1] = -1
-                                    break;
-                                case "RIGHT":
-                                    delta[1] = 1
-                                    break;
-                                case "UP":
-                                    delta[0] = -1
-                                    break;
-                                case "DOWN":
-                                    delta[0] = 1
-                                    break;
-                            }
-                            coord = idx2Coord(i)
-                            next = getRelative(coord, delta)
-                            newLeds[i].color = leds[(colCount * next[0]) + next[1]].color
-                        }
-                        break;
-                    default:
-                        console.log("Unsupported Operation")
-                        break;
+                let codeLines = leds[i].code.split(/\r?\n/);
+
+                // Execute the script until reach the end of program.
+                let pc = 0;
+                while (pc < codeLines.length) {
+                    executeOperation(leds[i], codeLines[pc]);
+                    ++pc;
                 }
             }
 
@@ -109,6 +89,37 @@
 
             drawLeds();
         });
+
+        function executeOperation(led, codeLine) {
+            code = codeLine.split(" ")
+            switch (code[0]) {
+                case "COPY":
+                    {
+                        delta = [0, 0]
+                        switch (code[1]) {
+                            case "LEFT":
+                                delta[1] = -1
+                                break;
+                            case "RIGHT":
+                                delta[1] = 1
+                                break;
+                            case "UP":
+                                delta[0] = -1
+                                break;
+                            case "DOWN":
+                                delta[0] = 1
+                                break;
+                        }
+                        coord = idx2Coord(i)
+                        next = getRelative(coord, delta)
+                        newLeds[i].color = leds[(colCount * next[0]) + next[1]].color
+                    }
+                    break;
+                default:
+                    console.log("Unsupported Operation")
+                    break;
+            }
+        }
 
         function getCursorPosition(canvas, event) {
             const rect = canvas.getBoundingClientRect()
