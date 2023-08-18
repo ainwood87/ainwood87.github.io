@@ -19,23 +19,90 @@
     <canvas id="myCanvas" width="300" height="300" style="border:1px solid black"></canvas>
     <textarea id="scriptArea" name="scriptArea" rows="4" cols="50"></textarea>
     <script>
+        const regPattern = /^(COLOR|POW|DAT|BAK)$/
+        let absPattern = /\[(\d+),\s+(\d+)\]/
+
         class Led {
             constructor() {
                 this.color = "white";
-                this.on = false;
+                this.pow = false;
+                this.dat = 0
+                this.bak = 0
                 this.isSelected = false;
                 this.code = "nop";
                 this.row = 0;
                 this.col = 0;
                 this.getRelative = function (s) {
-                    /* The input is either one of the 4 pneumonics for directions, or a 'direction string' */
-                    if (s.slice(0, 2) == 'r"') {
-                        console.log("Received directional string")
-                        //TODO parse directional string
+                    /* For now just assume that s is a directional string */
+                    let dirs = s.split(" ")
+                    let nextCoords = dirs.reduce((acc, dir) => addDelta(acc, parseDirection(dir)), [this.row, this.col]);
+                    return leds[(nextCoords[0] * colCount) + nextCoords[1]]
+                }
+
+                //TODO use this function
+                this.decomposeRegister = function (s) {
+                    /* This will extract the parse both the vLed and the register */
+                    /* First try to match an external register using the dot notation */
+                    let ledRegMatch = s.match(/(.+)\.(.+)/)
+                    let vLed = null
+                    let reg = s
+                    if (null != ledRegMatch) {
+                        /* This must be an external register */
+                        /* reg is actually denoted with the dot notation */
+                        let ledString = ledRegMatch[1]
+                        reg = ledRegMatch[2]
+
+                        /* Now parse the vLed string to obtain the vLed */
+                        vLed = this.parseVled(ledString)
+                        if (null == vLed) {
+                            return null;
+                        }
+                    }
+
+                    return [vLed, reg]
+                }
+
+                this.parseVled = function (s) {
+                    /* There are three supported formats for address:
+                     * - Direction string: ie. (RIGHT UP UP)
+                     * - Relative coordinates (row, col) ie. (5, 3), meaning plus five rows, plus three columns.
+                     * - Absolute coordinates [row, col] ie. [5, 3], meaning row five, column three.
+                     */
+                    let absPattern = /\[(\d+),\s+(\d+)\]/
+                    let relPattern = /\((\d+),\s+(\d+)\)/
+
+                    let m = s.match(absPattern);
+                    if (null != m) {
+                        let row = parseInt(m[1])
+                        let col = parseInt(m[2])
+                        return leds[(row * colCount) + col]
+                    }
+
+                    m = s.match(relPattern);
+                    if (null != m) {
+                        let delta = [parseInt(m[1]), parseInt(m[2])]
+                        let [row, col] = addDelta([this.row, this.col], delta)
+                        return leds[(row * colCount) + col]
+                    }
+
+                    //parse a direction string. Note the direction string must be enclosed in brackets.
+                    let dirTokens = s.split(/\s+/)
+                    if ((dirTokens[0] != '(') || (dirTokens.slice(-1)[0] != ')')) {
+                        console.log("invalid direction string");
+                        return null;
                     } else {
-                        let delta = parseDirection(s);
-                        let nextCoords = addDelta([this.row, this.col], delta);
-                        return leds[(nextCoords[0] * colCount) + nextCoords[1]]
+                        const dirs = ['RIGHT', 'UP', 'LEFT', 'DOWN']
+                        let i = 1;
+
+                        for (i = 1; i < dirTokens.length - 1; ++i) {
+                            if (!dirs.includes(dirs[i])) {
+                                console.log("invalid direction string");
+                                return null;
+                            }
+                        }
+
+                        let [row, col] = dirs.reduce((acc, dir) => addDelta(acc, parseDirection(dir)), [this.row, this.col]);
+                        return leds[(row * colCount) + col]
                     }
                 }
             }
@@ -107,11 +174,37 @@
         });
 
         function executeOperation(led, codeLine) {
-            code = codeLine.split(" ")
-            switch (code[0]) {
+            let m = codeLine.match(/(\S+)\s+(\S+)\s+(.+)/)
+            let [op, dest, src] = m
+
+            switch (op) {
+                case "MOV":
+                    {
+                        // parse the value. This is either an immediate number, or a reference to a register.
+                        let val = parseInt(src);
+                        if (val == Nan) {
+                            let [vLed, reg] = this.decomposeRegister(src);
+                            //TODO add switch on reg and obtain val.
+                        }
+
+                        // Parse the destination, which can only be a register of this vLed, ie: DAT, POW, COL
+                        switch (dest) {
+                            case "DAT":
+                                led.dat = val;
+                                break;
+                            case "POW":
+                                led.dat = val;
+                                break;
+                            case "COL":
+                                led.col = val;
+                                break;
+                        }
+                        break;
+                    }
+                    break;
                 case "COPY":
                     {
-                        next = led.getRelative(code[1])
+                        next = led.getRelative(codeLine.slice(code[0].length + 1))
                         newLeds[i].color = leds[(colCount * next.row) + next.col].color
                     }
                     break;
@@ -141,7 +234,7 @@
         }
 
         function addDelta(coords, delta) {
-            let nextCoords = [0,0]
+            let nextCoords = [0, 0]
             nextCoords[0] = coords[0] + delta[0]
             nextCoords[1] = coords[1] + delta[1]
 
