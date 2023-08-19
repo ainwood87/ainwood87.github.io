@@ -24,7 +24,7 @@
 
         class Led {
             constructor() {
-                this.color = "white";
+                this.color = 0xffffff; /* white */
                 this.pow = false;
                 this.dat = 0
                 this.bak = 0
@@ -67,6 +67,10 @@
                             console.log("invalid reg")
                             break;
                     }
+                }
+
+                this.getColorString = function() {
+                    return '#' + this.color.toString(16).padStart(6, '0');
                 }
 
                 //TODO use this function
@@ -215,7 +219,6 @@
                         let src = m[3]
                         // parse the value. This is either an immediate number, or a reference to a register.
                         let val = parseInt(src);
-                        //TODO are colors not numbers? How do I specify an immediate value?
                         if (isNaN(val)) {
                             let res = led.decomposeRegister(src);
                             if (null != res) {
@@ -313,8 +316,9 @@
             return rv;
         }
 
-        function lightLed(canvas, event, color) {
+        function lightLed(canvas, event, colorString) {
             let [row, col] = getIndex(event);
+            let color = parseInt(colorString.slice(1), 16)
 
             /* Determine if the color is going to change */
             const hasChanged = (color != leds[(colCount * row) + col].color)
@@ -341,7 +345,7 @@
                 for (var col = 0; col < rowCount; ++col) {
                     var led = leds[(row * colCount) + col]
                     ctx.strokeStyle = "black"
-                    ctx.fillStyle = led.color;
+                    ctx.fillStyle = led.getColorString();
                     ctx.fillRect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
                     ctx.rect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
                 }
@@ -358,7 +362,7 @@
                     var led = leds[(row * colCount) + col]
                     if (led.isSelected) {
                         ctx.strokeStyle = "blue"
-                        ctx.fillStyle = led.color;
+                        ctx.fillStyle = led.getColorString();
                         ctx.fillRect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
                         ctx.rect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
                     }
