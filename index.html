@@ -105,8 +105,8 @@
                      * - Relative coordinates (row, col) ie. (5, 3), meaning plus five rows, plus three columns.
                      * - Absolute coordinates [row, col] ie. [5, 3], meaning row five, column three.
                      */
-                    let absPattern = /\[(\d+),\s+(\d+)\]/
-                    let relPattern = /\((\d+),\s+(\d+)\)/
+                    let absPattern = /\[(\d+),\s*(\d+)\]/
+                    let relPattern = /\((\d+),\s*(\d+)\)/
 
                     let m = s.match(absPattern);
                     if (null != m) {
@@ -242,11 +242,10 @@
                 case "COPY":
                     {
                         //TODO fix the COPY command, now that MOV is working
-                        let m = codeLine.match(/(\S+)\s+(\S+)\s+(.+)/)
-                        let dest = m[2]
-                        let src = m[3]
-                        next = led.getRelative(codeLine.slice(code[0].length + 1))
-                        newLeds[i].color = leds[(colCount * next.row) + next.col].color
+                        let m = codeLine.match(/(\S+)\s+(.+)/)
+                        let src = m[2]
+                        let vLed = led.parseVled(src)
+                        newLeds[i].color = vLed.color
                     }
                     break;
                 default:
