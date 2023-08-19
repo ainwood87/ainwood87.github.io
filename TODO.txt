@@ -1,4 +1,3 @@
-- Use only the first character for directions (R L U D).
 - Make programs case insensitive.
 - Buttons for column/row select/paint.
 - Button for select/paint all.

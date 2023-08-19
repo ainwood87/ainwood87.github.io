@@ -22,7 +22,6 @@
     <textarea id="scriptArea" name="scriptArea" rows="4" cols="50"></textarea>
     <textarea id="inspectArea" name="inspectArea" rows="4" cols="50"></textarea>
     <script>
-        const regPattern = /^(COLOR|POW|DAT|BAK)$/
         let absPattern = /\[(\d+),\s+(\d+)\]/
 
         class Led {
@@ -44,11 +43,11 @@
 
                 this.getReg = function (s) {
                     switch (s) {
-                        case "DAT":
+                        case "dat":
                             return this.dat;
-                        case "POW":
+                        case "pow":
                             return this.pow;
-                        case "COL":
+                        case "col":
                             return this.color
                         default:
                             return null;
@@ -57,13 +56,13 @@
 
                 this.setReg = function (s, val) {
                     switch (s) {
-                        case "DAT":
+                        case "dat":
                             this.dat = val;
                             break;
-                        case "POW":
+                        case "pow":
                             this.pow = val;
                             break;
-                        case "COL":
+                        case "col":
                             this.color = val;
                             break;
                         default:
@@ -101,7 +100,7 @@
 
                 this.parseVled = function (s) {
                     /* There are three supported formats for address:
-                     * - Direction string: ie. (RIGHT UP UP)
+                     * - Direction string: ie. (r u u)
                      * - Relative coordinates (row, col) ie. (5, 3), meaning plus five rows, plus three columns.
                      * - Absolute coordinates [row, col] ie. [5, 3], meaning row five, column three.
                      */
@@ -128,7 +127,7 @@
                         return null;
                     } else {
                         let dirTokens = s.slice(1, -1).split(/\s+/)
-                        const dirs = ['RIGHT', 'UP', 'LEFT', 'DOWN']
+                        const dirs = ['r', 'u', 'l', 'd']
                         let i = 1;
 
                         for (i = 0; i < dirTokens.length; ++i) {
@@ -218,7 +217,7 @@
             let op = m[1]
 
             switch (op) {
-                case "MOV":
+                case "mov":
                     {
                         let m = codeLine.match(/(\S+)\s+(\S+)\s+(.+)/)
                         let dest = m[2]
@@ -239,9 +238,8 @@
                         newLeds[(led.row * colCount) + led.col].setReg(dest, val);
                     }
                     break;
-                case "COPY":
+                case "copy":
                     {
-                        //TODO fix the COPY command, now that MOV is working
                         let m = codeLine.match(/(\S+)\s+(.+)/)
                         let src = m[2]
                         let vLed = led.parseVled(src)
@@ -257,16 +255,16 @@
         function parseDirection(s) {
             let delta = [0, 0]
             switch (s) {
-                case "LEFT":
+                case "l":
                     delta[1] = -1
                     break;
-                case "RIGHT":
+                case "r":
                     delta[1] = 1
                     break;
-                case "UP":
+                case "u":
                     delta[0] = -1
                     break;
-                case "DOWN":
+                case "d":
                     delta[0] = 1
                     break;
             }
