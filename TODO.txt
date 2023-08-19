@@ -7,5 +7,3 @@
 - Bigger buttons for touch.
 - Unselect.
 - Fix COPY
-- View registers.
-    - Could be with mouseover, but doesn't support touch nicely?
