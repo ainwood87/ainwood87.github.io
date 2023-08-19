@@ -39,6 +39,36 @@
                     return leds[(nextCoords[0] * colCount) + nextCoords[1]]
                 }
 
+                this.getReg = function (s) {
+                    switch (s) {
+                        case "DAT":
+                            return this.dat;
+                        case "POW":
+                            return this.pow;
+                        case "COL":
+                            return this.color
+                        default:
+                            return null;
+                    }
+                }
+
+                this.setReg = function (s, val) {
+                    switch (s) {
+                        case "DAT":
+                            this.dat = val;
+                            break;
+                        case "POW":
+                            this.pow = val;
+                            break;
+                        case "COL":
+                            this.color = val;
+                            break;
+                        default:
+                            console.log("invalid reg")
+                            break;
+                    }
+                }
+
                 //TODO use this function
                 this.decomposeRegister = function (s) {
                     /* This will extract the parse both the vLed and the register */
@@ -86,22 +116,22 @@
                     }
 
                     //parse a direction string. Note the direction string must be enclosed in brackets.
-                    let dirTokens = s.split(/\s+/)
-                    if ((dirTokens[0] != '(') || (dirTokens.slice(-1)[0] != ')')) {
+                    if ((s[0] != '(') || (s.slice(-1)[0] != ')')) {
                         console.log("invalid direction string");
                         return null;
                     } else {
+                        let dirTokens = s.slice(1, -1).split(/\s+/)
                         const dirs = ['RIGHT', 'UP', 'LEFT', 'DOWN']
                         let i = 1;
 
-                        for (i = 1; i < dirTokens.length - 1; ++i) {
-                            if (!dirs.includes(dirs[i])) {
+                        for (i = 0; i < dirTokens.length; ++i) {
+                            if (!dirs.includes(dirTokens[i])) {
                                 console.log("invalid direction string");
                                 return null;
                             }
                         }
 
-                        let [row, col] = dirs.reduce((acc, dir) => addDelta(acc, parseDirection(dir)), [this.row, this.col]);
+                        let [row, col] = dirTokens.reduce((acc, dir) => addDelta(acc, parseDirection(dir)), [this.row, this.col]);
                         return leds[(row * colCount) + col]
                     }
                 }
@@ -174,36 +204,38 @@
         });
 
         function executeOperation(led, codeLine) {
-            let m = codeLine.match(/(\S+)\s+(\S+)\s+(.+)/)
-            let [op, dest, src] = m
+            let m = codeLine.match(/(\S+)\s*/)
+            let op = m[1]
 
             switch (op) {
                 case "MOV":
                     {
+                        let m = codeLine.match(/(\S+)\s+(\S+)\s+(.+)/)
+                        let dest = m[2]
+                        let src = m[3]
                         // parse the value. This is either an immediate number, or a reference to a register.
                         let val = parseInt(src);
-                        if (val == Nan) {
-                            let [vLed, reg] = this.decomposeRegister(src);
-                            //TODO add switch on reg and obtain val.
+                        //TODO are colors not numbers? How do I specify an immediate value?
+                        if (isNaN(val)) {
+                            let res = led.decomposeRegister(src);
+                            if (null != res) {
+                                let vLed = res[0]
+                                let reg = res[1]
+                                val = vLed.getReg(reg);
+                            } else {
+                                console.log("invalid instruction")
+                            }
                         }
 
-                        // Parse the destination, which can only be a register of this vLed, ie: DAT, POW, COL
-                        switch (dest) {
-                            case "DAT":
-                                led.dat = val;
-                                break;
-                            case "POW":
-                                led.dat = val;
-                                break;
-                            case "COL":
-                                led.col = val;
-                                break;
-                        }
-                        break;
+                        newLeds[(led.row * colCount) + led.col].setReg(dest, val);
                     }
                     break;
                 case "COPY":
                     {
+                        //TODO fix the COPY command, now that MOV is working
+                        let m = codeLine.match(/(\S+)\s+(\S+)\s+(.+)/)
+                        let dest = m[2]
+                        let src = m[3]
                         next = led.getRelative(codeLine.slice(code[0].length + 1))
                         newLeds[i].color = leds[(colCount * next.row) + next.col].color
                     }
