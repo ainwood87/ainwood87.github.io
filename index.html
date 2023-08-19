@@ -27,7 +27,7 @@
         class Led {
             constructor() {
                 this.color = 0xffffff; /* white */
-                this.pow = false;
+                this.pow = 1;
                 this.dat = 0
                 this.bak = 0
                 this.isSelected = false;
@@ -358,7 +358,7 @@
                 for (var col = 0; col < rowCount; ++col) {
                     var led = leds[(row * colCount) + col]
                     ctx.strokeStyle = "black"
-                    ctx.fillStyle = led.getColorString();
+                    ctx.fillStyle = (led.pow == 1) ? led.getColorString() : "#000000";
                     ctx.fillRect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
                     ctx.rect(col * ledWidth, row * ledHeight, ledWidth, ledHeight);
                 }
