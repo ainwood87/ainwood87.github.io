@@ -1,0 +1,8 @@
+- Use only the first character for directions (R L U D).
+- Make programs case insensitive.
+- Buttons for column/row select/paint.
+- Button for select/paint all.
+- Support touch better.
+- Animation.
+- Bigger buttons for touch.
+- Unselect.
