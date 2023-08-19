@@ -8,7 +8,9 @@
     <input type="radio" id="erase" name="mode" value="erase">
     <label for="erase">Erase</label><br>
     <input type="radio" id="select" name="mode" value="select">
-    <label for="select">Select</label>
+    <label for="select">Select</label><br>
+    <input type="radio" id="inspect" name="mode" value="inspect">
+    <label for="select">Inspect</label>
     <br>
     <label for="paintcolor">Active Color:</label>
     <input type="color" id="paintcolor" name="paintcolor" value="#ff0000">
@@ -18,6 +20,7 @@
     <br>
     <canvas id="myCanvas" width="300" height="300" style="border:1px solid black"></canvas>
     <textarea id="scriptArea" name="scriptArea" rows="4" cols="50"></textarea>
+    <textarea id="inspectArea" name="inspectArea" rows="4" cols="50"></textarea>
     <script>
         const regPattern = /^(COLOR|POW|DAT|BAK)$/
         let absPattern = /\[(\d+),\s+(\d+)\]/
@@ -69,7 +72,7 @@
                     }
                 }
 
-                this.getColorString = function() {
+                this.getColorString = function () {
                     return '#' + this.color.toString(16).padStart(6, '0');
                 }
 
@@ -143,6 +146,7 @@
         }
         var leds = []
         var newLeds = []
+        var inspectedLed = null;
         const rowCount = 10
         const colCount = 10
         for (var i = 0; i < rowCount * colCount; ++i) {
@@ -156,6 +160,7 @@
         const loadButton = document.getElementById("loadButton");
         const stepButton = document.getElementById("stepButton");
         const scriptArea = document.getElementById("scriptArea");
+        const inspectArea = document.getElementById("inspectArea");
         const ledWidth = canvas.width / rowCount
         const ledHeight = canvas.height / colCount
         const ctx = canvas.getContext("2d");
@@ -205,6 +210,7 @@
             leds = newLeds
 
             drawLeds();
+            inspectLed(inspectedLed);
         });
 
         function executeOperation(led, codeLine) {
@@ -316,6 +322,16 @@
             return rv;
         }
 
+        function inspectLed(led) {
+            if (null != led) {
+                inspectArea.value = `LED at [${led.row}, ${led.col}]:\r\n`
+                    + `color:\t${led.color} (${led.getColorString()})\r\n`
+                    + `pow:\t${led.pow}\r\n`
+                    + `data:\t${led.dat}\r\n`
+                    + `bak:\t${led.bak}\r\n`
+            }
+        }
+
         function lightLed(canvas, event, colorString) {
             let [row, col] = getIndex(event);
             let color = parseInt(colorString.slice(1), 16)
@@ -392,14 +408,18 @@
                     drawLeds();
                 }
             } else if (mode == "erase") {
-                if (lightLed(canvas, event, "white")) {
+                if (lightLed(canvas, event, "#ffffff")) {
                     drawLeds();
                 }
             } else if (mode == "select") {
                 if (selectLed(event)) {
                     drawLeds();
                 }
+            } else if (mode == "inspect") {
+                let [row, col] = getIndex(event);
+                inspectedLed = leds[(colCount * row) + col];
             }
+            inspectLed(inspectedLed);
         });
 
         /* Reset the mouseDown state if we mouse out of the canvas */
