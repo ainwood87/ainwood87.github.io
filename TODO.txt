@@ -5,4 +5,7 @@
 - Animation.
 - Bigger buttons for touch.
 - Unselect.
-- Fix COPY
+- Support more instructions
+    - Jumps
+    - labels
+    - swap? Could be done with move.

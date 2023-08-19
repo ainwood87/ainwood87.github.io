@@ -145,7 +145,7 @@
         }
         var leds = []
         var newLeds = []
-        var inspectedLed = null;
+        var inspectedLedCoords = null;
         const rowCount = 10
         const colCount = 10
         for (var i = 0; i < rowCount * colCount; ++i) {
@@ -209,7 +209,7 @@
             leds = newLeds
 
             drawLeds();
-            inspectLed(inspectedLed);
+            inspectLed(inspectedLedCoords);
         });
 
         function executeOperation(led, codeLine) {
@@ -229,6 +229,10 @@
                             if (null != res) {
                                 let vLed = res[0]
                                 let reg = res[1]
+                                /* If a plain register was provided in the second operand, the register is targeting the current led. */
+                                if (null == vLed) {
+                                    vLed = led;
+                                }
                                 val = vLed.getReg(reg);
                             } else {
                                 console.log("invalid instruction")
@@ -236,6 +240,32 @@
                         }
 
                         newLeds[(led.row * colCount) + led.col].setReg(dest, val);
+                    }
+                    break;
+                case "add":
+                    {
+                        let m = codeLine.match(/(\S+)\s+(\S+)\s+(.+)/)
+                        let dest = m[2]
+                        let src = m[3]
+                        // parse the value. This is either an immediate number, or a reference to a register.
+                        let operand2 = parseInt(src);
+                        if (isNaN(operand2)) {
+                            let res = led.decomposeRegister(src);
+                            if (null != res) {
+                                let vLed = res[0]
+                                let reg = res[1]
+                                /* If a plain register was provided in the second operand, the register is targeting the current led. */
+                                if (null == vLed) {
+                                    vLed = led;
+                                }
+                                operand2 = vLed.getReg(reg);
+                            } else {
+                                console.log("invalid instruction")
+                            }
+                        }
+
+                        let operand1 = newLeds[(led.row * colCount) + led.col].getReg(dest);
+                        newLeds[(led.row * colCount) + led.col].setReg(dest, operand1 + operand2);
                     }
                     break;
                 case "copy":
@@ -319,7 +349,8 @@
             return rv;
         }
 
-        function inspectLed(led) {
+        function inspectLed(ledCoords) {
+            let led = leds[(ledCoords[0] * colCount) + ledCoords[1]]
             if (null != led) {
                 inspectArea.value = `LED at [${led.row}, ${led.col}]:\r\n`
                     + `color:\t${led.color} (${led.getColorString()})\r\n`
@@ -414,9 +445,9 @@
                 }
             } else if (mode == "inspect") {
                 let [row, col] = getIndex(event);
-                inspectedLed = leds[(colCount * row) + col];
+                inspectedLedCoords = [row, col];
             }
-            inspectLed(inspectedLed);
+            inspectLed(inspectedLedCoords);
         });
 
         /* Reset the mouseDown state if we mouse out of the canvas */
