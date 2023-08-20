@@ -14,6 +14,7 @@
     <br>
     <label for="paintcolor">Active Color:</label>
     <input type="color" id="paintcolor" name="paintcolor" value="#ff0000">
+    <button type="button" id="allButton">All</button>
     <button type="button" id="loadButton">Load Script</button>
     <button type="button" id="writeButton">Write Script</button>
     <button type="button" id="stepButton">Step</button>
@@ -176,6 +177,7 @@
         }
         const canvas = document.getElementById("myCanvas");
         const writebutton = document.getElementById("writeButton");
+        const allButton = document.getElementById("allButton");
         const loadButton = document.getElementById("loadButton");
         const stepButton = document.getElementById("stepButton");
         const scriptArea = document.getElementById("scriptArea");
@@ -200,6 +202,25 @@
             selected = leds.filter(function (led) { return led.isSelected })
             selected.forEach(item => item.code = scriptArea.value);
             selected.forEach(item => item.parseLabels());
+        });
+
+        //TODO function based on mode
+        allButton.addEventListener('click', function (event) {
+            console.log("clicked all button")
+            const mode = getMode();
+
+            if (mode == "paint") {
+                const colorString = document.getElementById("paintcolor").value;
+                let color = parseInt(colorString.slice(1), 16)
+                leds.forEach(item => item.color = color);
+            } else if (mode == "erase") {
+                leds.forEach(item => item.color = 0xffffffff);
+            } else if (mode == "select") {
+                leds.forEach(item => item.isSelected = true);
+            } else if (mode == "inspect") {
+                console.log("Inspect all is unsupported.")
+            }
+            drawLeds();
         });
 
         loadButton.addEventListener('click', function (event) {
