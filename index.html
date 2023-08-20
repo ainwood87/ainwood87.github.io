@@ -50,6 +50,8 @@
                             return this.pow;
                         case "col":
                             return this.color
+                        case "bak":
+                            return this.bak
                         default:
                             return null;
                     }
@@ -65,6 +67,9 @@
                             break;
                         case "col":
                             this.color = val;
+                            break;
+                        case "bak":
+                            this.bak = val;
                             break;
                         default:
                             console.log("invalid reg")
@@ -236,7 +241,10 @@
 
         function executeOperation(led, codeLine, pc) {
             let m = codeLine.match(/(\S+)\s*/)
-            let op = m[1]
+            let op = m[1];
+            let row = led.row;
+            let col = led.col;
+            let newLed = newLeds[(row * colCount) + col];
 
             switch (op) {
                 case "nop":
@@ -251,13 +259,13 @@
                         // parse the value. This is either an immediate number, or a reference to a register.
                         let val = parseInt(src);
                         if (isNaN(val)) {
-                            let res = led.decomposeRegister(src);
+                            let res = newLed.decomposeRegister(src);
                             if (null != res) {
                                 let vLed = res[0]
                                 let reg = res[1]
                                 /* If a plain register was provided in the second operand, the register is targeting the current led. */
                                 if (null == vLed) {
-                                    vLed = led;
+                                    vLed = newLed;
                                 }
                                 val = vLed.getReg(reg);
                             } else {
@@ -265,7 +273,7 @@
                             }
                         }
 
-                        newLeds[(led.row * colCount) + led.col].setReg(dest, val);
+                        newLeds[(row * colCount) + col].setReg(dest, val);
                     }
                     break;
                 case "cmp":
@@ -275,15 +283,15 @@
                         let dest = m[2]
                         let src = m[3]
                         // parse the value. This is either an immediate number, or a reference to a register.
-                        let val1 = parseInt(src);
+                        let val1 = parseInt(dest);
                         if (isNaN(val1)) {
-                            let res = led.decomposeRegister(dest);
+                            let res = newLed.decomposeRegister(dest);
                             if (null != res) {
                                 let vLed = res[0]
                                 let reg = res[1]
                                 /* If a plain register was provided in the second operand, the register is targeting the current led. */
                                 if (null == vLed) {
-                                    vLed = led;
+                                    vLed = newLed;
                                 }
                                 val1 = vLed.getReg(reg);
                             } else {
@@ -292,13 +300,13 @@
                         }
                         let val2 = parseInt(src);
                         if (isNaN(val2)) {
-                            let res = led.decomposeRegister(src);
+                            let res = newLed.decomposeRegister(src);
                             if (null != res) {
                                 let vLed = res[0]
                                 let reg = res[1]
                                 /* If a plain register was provided in the second operand, the register is targeting the current led. */
                                 if (null == vLed) {
-                                    vLed = led;
+                                    vLed = newLed;
                                 }
                                 val2 = vLed.getReg(reg);
                             } else {
@@ -313,7 +321,7 @@
                         if (val1 > val2) {
                             res = 1
                         }
-                        newLeds[(led.row * colCount) + led.col].setReg("dat", res);
+                        newLeds[(row * colCount) + col].setReg("dat", res);
                     }
                     break;
                 case "add":
@@ -325,13 +333,13 @@
                         // parse the value. This is either an immediate number, or a reference to a register.
                         let operand2 = parseInt(src);
                         if (isNaN(operand2)) {
-                            let res = led.decomposeRegister(src);
+                            let res = newLed.decomposeRegister(src);
                             if (null != res) {
                                 let vLed = res[0]
                                 let reg = res[1]
                                 /* If a plain register was provided in the second operand, the register is targeting the current led. */
                                 if (null == vLed) {
-                                    vLed = led;
+                                    vLed = newLed;
                                 }
                                 operand2 = vLed.getReg(reg);
                             } else {
@@ -339,8 +347,8 @@
                             }
                         }
 
-                        let operand1 = newLeds[(led.row * colCount) + led.col].getReg(dest);
-                        newLeds[(led.row * colCount) + led.col].setReg(dest, operand1 + operand2);
+                        let operand1 = newLeds[(row * colCount) + col].getReg(dest);
+                        newLeds[(row * colCount) + col].setReg(dest, operand1 + operand2);
                     }
                     break;
                 case "copy":
@@ -348,10 +356,16 @@
                         ++pc;
                         let m = codeLine.match(/(\S+)\s+(.+)/)
                         let src = m[2]
-                        let vLed = led.parseVled(src)
+                        let vLed = newLed.parseVled(src)
                         newLeds[i].color = vLed.color
                     }
                     break;
+                case "jlz":
+                    if (0 <= newLed.dat) {
+                        ++pc;
+                        break;
+                    }
+                    //fallthrough
                 case "jmp":
                     {
                         let m = codeLine.match(/(.+)\s+(.+)/)
@@ -359,7 +373,32 @@
                             let label = m[2]
                             let lineNumber = null;
 
-                            for (let [key, value] of led.labels.entries()) {
+                            //TODO check if the labels got deep copied.
+                            for (let [key, value] of newLed.labels.entries()) {
+                                if (value === label) {
+                                    lineNumber = key;
+                                }
+                            }
+
+                            if (lineNumber == null) {
+                                console.log("Invalid label");
+                            }
+                            pc = lineNumber;
+                        }
+                        else
+                        {
+                            console.log("Invalid syntax");
+                        }
+
+                    }
+                    break;
+                    {
+                        let m = codeLine.match(/(.+)\s+(.+)/)
+                        if (m != null) {
+                            let label = m[2]
+                            let lineNumber = null;
+
+                            for (let [key, value] of newLed.labels.entries()) {
                                 if (value === label) {
                                     lineNumber = key;
                                 }
