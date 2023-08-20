@@ -218,15 +218,13 @@
                 let pc = 0;
                 while (pc < codeLines.length) {
                     // skip the line if it is whitespace, or a label
-                    if (leds[i].labels.has(pc))
-                    {
-                        //skip
+                    if (leds[i].labels.has(pc)) {
+                        ++pc;
                     } else if (codeLines[pc].trim().length === 0) {
-                        //skip
+                        ++pc;
                     } else {
-                        executeOperation(leds[i], codeLines[pc]);
+                        pc = executeOperation(leds[i], codeLines[pc], pc);
                     }
-                    ++pc;
                 }
             }
 
@@ -236,13 +234,17 @@
             inspectLed(inspectedLedCoords);
         });
 
-        function executeOperation(led, codeLine) {
+        function executeOperation(led, codeLine, pc) {
             let m = codeLine.match(/(\S+)\s*/)
             let op = m[1]
 
             switch (op) {
+                case "nop":
+                    ++pc;
+                    break;
                 case "mov":
                     {
+                        ++pc;
                         let m = codeLine.match(/(\S+)\s+(\S+)\s+(.+)/)
                         let dest = m[2]
                         let src = m[3]
@@ -268,6 +270,7 @@
                     break;
                 case "cmp":
                     {
+                        ++pc;
                         let m = codeLine.match(/(\S+)\s+(.+)\s+(.+)/)
                         let dest = m[2]
                         let src = m[3]
@@ -315,6 +318,7 @@
                     break;
                 case "add":
                     {
+                        ++pc;
                         let m = codeLine.match(/(\S+)\s+(\S+)\s+(.+)/)
                         let dest = m[2]
                         let src = m[3]
@@ -341,16 +345,45 @@
                     break;
                 case "copy":
                     {
+                        ++pc;
                         let m = codeLine.match(/(\S+)\s+(.+)/)
                         let src = m[2]
                         let vLed = led.parseVled(src)
                         newLeds[i].color = vLed.color
                     }
                     break;
+                case "jmp":
+                    {
+                        let m = codeLine.match(/(.+)\s+(.+)/)
+                        if (m != null) {
+                            let label = m[2]
+                            let lineNumber = null;
+
+                            for (let [key, value] of led.labels.entries()) {
+                                if (value === label) {
+                                    lineNumber = key;
+                                }
+                            }
+
+                            if (lineNumber == null) {
+                                console.log("Invalid label");
+                            }
+                            pc = lineNumber;
+                        }
+                        else
+                        {
+                            console.log("Invalid syntax");
+                        }
+
+                    }
+                    break;
                 default:
                     console.log("Unsupported Operation")
+                    ++pc;
                     break;
             }
+
+            return pc;
         }
 
         function parseDirection(s) {

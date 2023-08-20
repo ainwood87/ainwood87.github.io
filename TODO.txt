@@ -11,4 +11,5 @@
     - labels
     - swap? Could be done with move.
 - Support a stack? PUSH and POP?
+- Support RANDOM
 
