@@ -34,6 +34,7 @@
                 this.code = "nop";
                 this.row = 0;
                 this.col = 0;
+                this.labels = new Map();
                 this.getRelative = function (s) {
                     /* For now just assume that s is a directional string */
                     let dirs = s.split(" ")
@@ -73,6 +74,20 @@
 
                 this.getColorString = function () {
                     return '#' + this.color.toString(16).padStart(6, '0');
+                }
+
+                this.parseLabels = function () {
+                    var i;
+                    var lines = this.code.split(/\r\n|\r|\n/)
+                    this.labels = new Map();
+                    for (i = 0; i < lines.length; ++i) {
+                        // see if line matches pattern
+                        let m = lines[i].match(/(.*):(\s*)/)
+                        if (null != m) {
+                            console.log("found label " + m[1])
+                            this.labels.set(i, m[1]);
+                        }
+                    }
                 }
 
                 //TODO use this function
@@ -179,6 +194,7 @@
             console.log("clicked write button")
             selected = leds.filter(function (led) { return led.isSelected })
             selected.forEach(item => item.code = scriptArea.value);
+            selected.forEach(item => item.parseLabels());
         });
 
         loadButton.addEventListener('click', function (event) {
@@ -201,7 +217,15 @@
                 // Execute the script until reach the end of program.
                 let pc = 0;
                 while (pc < codeLines.length) {
-                    executeOperation(leds[i], codeLines[pc]);
+                    // skip the line if it is whitespace, or a label
+                    if (leds[i].labels.has(pc))
+                    {
+                        //skip
+                    } else if (codeLines[pc].trim().length === 0) {
+                        //skip
+                    } else {
+                        executeOperation(leds[i], codeLines[pc]);
+                    }
                     ++pc;
                 }
             }
@@ -397,13 +421,15 @@
         }
 
         function inspectLed(ledCoords) {
-            let led = leds[(ledCoords[0] * colCount) + ledCoords[1]]
-            if (null != led) {
-                inspectArea.value = `LED at [${led.row}, ${led.col}]:\r\n`
-                    + `color:\t${led.color} (${led.getColorString()})\r\n`
-                    + `pow:\t${led.pow}\r\n`
-                    + `data:\t${led.dat}\r\n`
-                    + `bak:\t${led.bak}\r\n`
+            if (null != ledCoords) {
+                let led = leds[(ledCoords[0] * colCount) + ledCoords[1]]
+                if (null != led) {
+                    inspectArea.value = `LED at [${led.row}, ${led.col}]:\r\n`
+                        + `color:\t${led.color} (${led.getColorString()})\r\n`
+                        + `pow:\t${led.pow}\r\n`
+                        + `data:\t${led.dat}\r\n`
+                        + `bak:\t${led.bak}\r\n`
+                }
             }
         }
 
