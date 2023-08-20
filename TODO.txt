@@ -5,7 +5,10 @@
 - Animation.
 - Bigger buttons for touch.
 - Unselect.
+- Set registers in IDE, like how you can set color. 
 - Support more instructions
     - Jumps
     - labels
     - swap? Could be done with move.
+- Support a stack? PUSH and POP?
+

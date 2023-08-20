@@ -242,6 +242,53 @@
                         newLeds[(led.row * colCount) + led.col].setReg(dest, val);
                     }
                     break;
+                case "cmp":
+                    {
+                        let m = codeLine.match(/(\S+)\s+(.+)\s+(.+)/)
+                        let dest = m[2]
+                        let src = m[3]
+                        // parse the value. This is either an immediate number, or a reference to a register.
+                        let val1 = parseInt(src);
+                        if (isNaN(val1)) {
+                            let res = led.decomposeRegister(dest);
+                            if (null != res) {
+                                let vLed = res[0]
+                                let reg = res[1]
+                                /* If a plain register was provided in the second operand, the register is targeting the current led. */
+                                if (null == vLed) {
+                                    vLed = led;
+                                }
+                                val1 = vLed.getReg(reg);
+                            } else {
+                                console.log("invalid instruction")
+                            }
+                        }
+                        let val2 = parseInt(src);
+                        if (isNaN(val2)) {
+                            let res = led.decomposeRegister(src);
+                            if (null != res) {
+                                let vLed = res[0]
+                                let reg = res[1]
+                                /* If a plain register was provided in the second operand, the register is targeting the current led. */
+                                if (null == vLed) {
+                                    vLed = led;
+                                }
+                                val2 = vLed.getReg(reg);
+                            } else {
+                                console.log("invalid instruction")
+                            }
+                        }
+
+                        let res = 0
+                        if (val1 < val2) {
+                            res = -1
+                        }
+                        if (val1 > val2) {
+                            res = 1
+                        }
+                        newLeds[(led.row * colCount) + led.col].setReg("dat", res);
+                    }
+                    break;
                 case "add":
                     {
                         let m = codeLine.match(/(\S+)\s+(\S+)\s+(.+)/)
